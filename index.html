@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Year Countdown</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        body {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            position: relative;
+        }
+        
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            color: #f1c40f;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.7);
+        }
+        
+        .countdown {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time h2 {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #f1c40f, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        
+        .time small {
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            color: #bdc3c7;
+        }
+        
+        .message {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            color: #3498db;
+            text-shadow: 0 0 10px rgba(52, 152, 219, 0.7);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .show {
+            opacity: 1;
+        }
+        
+        .audio-controls {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background-color: rgba(52, 152, 219, 0.3);
+            border: 1px solid #3498db;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background-color: rgba(52, 152, 219, 0.6);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .time h2 {
+                font-size: 2.5rem;
+            }
+            
+            .time small {
+                font-size: 1rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Background GIF with no overlay -->
+    <img id="background" src="Gif1.gif" alt="New Year Background">
+    
+    <!-- Audio element for background music -->
+    <audio id="bgMusic" src="Music1.mp3" loop></audio>
+    
+    <!-- Main container -->
+    <div class="container">
+        <h1 id="countdownTitle">Countdown to New Year</h1>
+        
+        <div class="countdown">
+            <div class="time">
+                <h2 id="days">00</h2>
+                <small>Days</small>
+            </div>
+            <div class="time">
+                <h2 id="hours">00</h2>
+                <small>Hours</small>
+            </div>
+            <div class="time">
+                <h2 id="minutes">00</h2>
+                <small>Minutes</small>
+            </div>
+            <div class="time">
+                <h2 id="seconds">00</h2>
+                <small>Seconds</small>
+            </div>
+        </div>
+        
+        <div id="newYearMessage" class="message">Happy New Year!</div>
+        
+        <div class="audio-controls">
+            <button id="playBtn" class="control-btn">Play Music</button>
+            <button id="pauseBtn" class="control-btn">Pause Music</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get DOM elements
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+            const newYearMessageEl = document.getElementById('newYearMessage');
+            const countdownTitleEl = document.getElementById('countdownTitle');
+            const bgMusic = document.getElementById('bgMusic');
+            const playBtn = document.getElementById('playBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            
+            // Calculate next new year
+            const getCurrentYear = () => {
+                return new Date().getFullYear();
+            };
+            
+            const getNextNewYear = () => {
+                const currentYear = getCurrentYear();
+                const currentDate = new Date();
+                const nextNewYear = new Date(`January 01, ${currentYear + 1} 00:00:00`);
+                
+                if (currentDate > nextNewYear) {
+                    return new Date(`January 01, ${currentYear + 2} 00:00:00`);
+                }
+                
+                return nextNewYear;
+            };
+            
+            // Set the next new year 
+            const nextNewYear = getNextNewYear();
+            const nextYearValue = nextNewYear.getFullYear();
+            
+            // Update the title with the year
+            countdownTitleEl.textContent = `Countdown to New Year ${nextYearValue}`;
+            
+            // Calculate remaining time
+            const updateCountdown = () => {
+                const currentTime = new Date();
+                const diff = nextNewYear - currentTime;
+                
+                // If new year has arrived
+                if (diff <= 0) {
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minutesEl.textContent = '00';
+                    secondsEl.textContent = '00';
+                    
+                    // Show new year message
+                    newYearMessageEl.classList.add('show');
+                    
+                    // Update for next year
+                    setTimeout(() => {
+                        const newNextYear = nextYearValue + 1;
+                        countdownTitleEl.textContent = `Countdown to New Year ${newNextYear}`;
+                        newYearMessageEl.classList.remove('show');
+                        // Reset countdown for next year
+                        setTimeout(updateCountdown, 1000);
+                    }, 5000);
+                    
+                    return;
+                }
+                
+                // Hide new year message if visible
+                if (newYearMessageEl.classList.contains('show')) {
+                    newYearMessageEl.classList.remove('show');
+                }
+                
+                // Calculate time values
+                const days = Math.floor(diff / 1000 / 60 / 60 / 24);
+                const hours = Math.floor(diff / 1000 / 60 / 60) % 24;
+                const minutes = Math.floor(diff / 1000 / 60) % 60;
+                const seconds = Math.floor(diff / 1000) % 60;
+                
+                // Update DOM
+                daysEl.textContent = days < 10 ? `0${days}` : days;
+                hoursEl.textContent = hours < 10 ? `0${hours}` : hours;
+                minutesEl.textContent = minutes < 10 ? `0${minutes}` : minutes;
+                secondsEl.textContent = seconds < 10 ? `0${seconds}` : seconds;
+            };
+            
+            // Audio controls
+            playBtn.addEventListener('click', () => {
+                bgMusic.play();
+            });
+            
+            pauseBtn.addEventListener('click', () => {
+                bgMusic.pause();
+            });
+            
+            // Check if browser allows autoplay
+            const attemptAutoplay = () => {
+                bgMusic.play()
+                    .catch(error => {
+                        console.log('Autoplay prevented. Click play button to start music.');
+                    });
+            };
+            
+            // Start the countdown
+            updateCountdown();
+            // Update the countdown every second
+            setInterval(updateCountdown, 1000);
+            
+            // Try to autoplay music
+            attemptAutoplay();
+        });
+    </script>
+</body>
+</html>
