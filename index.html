@@ -210,54 +210,61 @@
             
             // Set the next new year 
             const nextNewYear = getNextNewYear();
-            const nextYearValue = nextNewYear.getFullYear();
+            
+            // Make nextNewYear accessible globally for resetting
+            window.nextNewYear = nextNewYear;
             
             // Update the title with the year
-            countdownTitleEl.textContent = `Countdown to New Year ${nextYearValue}`;
+            countdownTitleEl.textContent = `Countdown to New Year ${nextNewYear.getFullYear()}`;
             
             // Calculate remaining time
             const updateCountdown = () => {
                 const currentTime = new Date();
-                const diff = nextNewYear - currentTime;
                 
-                // If new year has arrived
+                // Check if we're in the 3-day celebration period
+                const isNewYearDay = currentTime.getMonth() === 0; // January is 0
+                const dayOfMonth = currentTime.getDate(); // 1-31
+                const isInCelebrationPeriod = isNewYearDay && dayOfMonth <= 3;
+                
+                // Always calculate the countdown to the next upcoming new year
+                // This ensures the countdown is always working even during celebration
+                let nextYearToCountdown = window.nextNewYear;
+                let diff = nextYearToCountdown - currentTime;
+                
+                // If current new year has passed, update target to next new year
                 if (diff <= 0) {
-                    daysEl.textContent = '00';
-                    hoursEl.textContent = '00';
-                    minutesEl.textContent = '00';
-                    secondsEl.textContent = '00';
+                    // Calculate the next new year date
+                    const newNextYear = new Date(`January 01, ${nextYearToCountdown.getFullYear() + 1} 00:00:00`);
                     
-                    // Show new year message
-                    newYearMessageEl.classList.add('show');
+                    // Update the global nextNewYear variable for future calculations
+                    window.nextNewYear = newNextYear;
+                    nextYearToCountdown = newNextYear;
                     
-                    // Update for next year
-                    setTimeout(() => {
-                        const newNextYear = nextYearValue + 1;
-                        countdownTitleEl.textContent = `Countdown to New Year ${newNextYear}`;
-                        newYearMessageEl.classList.remove('show');
-                        // Reset countdown for next year
-                        setTimeout(updateCountdown, 1000);
-                    }, 5000);
+                    // Recalculate the time difference
+                    diff = nextYearToCountdown - currentTime;
                     
-                    return;
+                    // Update the display title
+                    countdownTitleEl.textContent = `Countdown to New Year ${newNextYear.getFullYear()}`;
                 }
                 
-                // Hide new year message if visible
-                if (newYearMessageEl.classList.contains('show')) {
-                    newYearMessageEl.classList.remove('show');
-                }
-                
-                // Calculate time values
+                // Calculate time values for the countdown
                 const days = Math.floor(diff / 1000 / 60 / 60 / 24);
                 const hours = Math.floor(diff / 1000 / 60 / 60) % 24;
                 const minutes = Math.floor(diff / 1000 / 60) % 60;
                 const seconds = Math.floor(diff / 1000) % 60;
                 
-                // Update DOM
+                // Update DOM with countdown
                 daysEl.textContent = days < 10 ? `0${days}` : days;
                 hoursEl.textContent = hours < 10 ? `0${hours}` : hours;
                 minutesEl.textContent = minutes < 10 ? `0${minutes}` : minutes;
                 secondsEl.textContent = seconds < 10 ? `0${seconds}` : seconds;
+                
+                // Show or hide the celebration message based on the date
+                if (isInCelebrationPeriod) {
+                    newYearMessageEl.classList.add('show');
+                } else {
+                    newYearMessageEl.classList.remove('show');
+                }
             };
             
             // Audio controls
