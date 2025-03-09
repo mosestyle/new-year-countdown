@@ -53,9 +53,11 @@
         .countdown {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 1.5rem;
             margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
         
         .time {
@@ -120,11 +122,19 @@
             }
             
             .time h2 {
-                font-size: 2.5rem;
+                font-size: 2.2rem;
             }
             
             .time small {
-                font-size: 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .countdown {
+                gap: 0.8rem;
+            }
+            
+            .time {
+                min-width: 60px;
             }
         }
     </style>
@@ -134,8 +144,8 @@
     <!-- Background GIF with no overlay -->
     <img id="background" src="Gif1.gif" alt="New Year Background">
     
-    <!-- Audio element for background music -->
-    <audio id="bgMusic" src="Music1.mp3" loop></audio>
+    <!-- Audio element for background music with autoplay enabled -->
+    <audio id="bgMusic" src="Music1.mp3" loop autoplay></audio>
     
     <!-- Main container -->
     <div class="container">
@@ -259,11 +269,32 @@
                 bgMusic.pause();
             });
             
-            // Check if browser allows autoplay
+            // Enhanced autoplay functionality to work around browser restrictions
             const attemptAutoplay = () => {
+                // Try multiple ways to enable autoplay
                 bgMusic.play()
                     .catch(error => {
-                        console.log('Autoplay prevented. Click play button to start music.');
+                        console.log('Autoplay initially prevented. Setting up event listeners...');
+                        
+                        // Set up various user interaction events to trigger audio
+                        const userInteractionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
+                        
+                        const playOnInteraction = () => {
+                            bgMusic.play()
+                                .then(() => {
+                                    // Remove all event listeners once audio successfully plays
+                                    userInteractionEvents.forEach(event => {
+                                        document.removeEventListener(event, playOnInteraction);
+                                    });
+                                    console.log('Audio started after user interaction');
+                                })
+                                .catch(err => console.log('Still could not play audio:', err));
+                        };
+                        
+                        // Add event listeners for various user interactions
+                        userInteractionEvents.forEach(event => {
+                            document.addEventListener(event, playOnInteraction, { once: true });
+                        });
                     });
             };
             
