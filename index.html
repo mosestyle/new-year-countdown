@@ -96,7 +96,7 @@
         }
         
         .audio-controls {
-            margin-top: 2rem;
+            margin-top: 1rem;
             display: flex;
             justify-content: center;
             gap: 1rem;
@@ -144,8 +144,8 @@
     <!-- Background GIF with no overlay -->
     <img id="background" src="Gif1.gif" alt="New Year Background">
     
-    <!-- Audio element for background music with autoplay enabled -->
-    <audio id="bgMusic" src="Music1.mp3" loop autoplay></audio>
+    <!-- Audio element for background music with autoplay, muted initially to bypass restrictions -->
+    <audio id="bgMusic" src="Music1.mp3" loop autoplay muted></audio>
     
     <!-- Main container -->
     <div class="container">
@@ -269,17 +269,49 @@
                 bgMusic.pause();
             });
             
-            // Enhanced autoplay functionality to work around browser restrictions
+            // Advanced autoplay functionality to bypass browser restrictions
             const attemptAutoplay = () => {
-                // Try multiple ways to enable autoplay
-                bgMusic.play()
-                    .catch(error => {
-                        console.log('Autoplay initially prevented. Setting up event listeners...');
+                // First attempt using the muted approach (most browsers allow muted autoplay)
+                bgMusic.muted = true;
+                
+                const playPromise = bgMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('Muted autoplay successful');
+                        
+                        // Create a visible notification that music is muted
+                        const muteNotification = document.createElement('div');
+                        muteNotification.textContent = 'Click anywhere to unmute music';
+                        muteNotification.style.position = 'fixed';
+                        muteNotification.style.bottom = '20px';
+                        muteNotification.style.left = '50%';
+                        muteNotification.style.transform = 'translateX(-50%)';
+                        muteNotification.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        muteNotification.style.color = 'white';
+                        muteNotification.style.padding = '10px 20px';
+                        muteNotification.style.borderRadius = '5px';
+                        muteNotification.style.zIndex = '1000';
+                        document.body.appendChild(muteNotification);
+                        
+                        // Set up document-wide click to unmute
+                        const unmute = () => {
+                            bgMusic.muted = false;
+                            document.removeEventListener('click', unmute);
+                            document.removeEventListener('touchstart', unmute);
+                            muteNotification.remove();
+                        };
+                        
+                        document.addEventListener('click', unmute);
+                        document.addEventListener('touchstart', unmute);
+                    }).catch(error => {
+                        console.log('Even muted autoplay failed. Using backup method...');
                         
                         // Set up various user interaction events to trigger audio
                         const userInteractionEvents = ['click', 'touchstart', 'keydown', 'scroll'];
                         
                         const playOnInteraction = () => {
+                            bgMusic.muted = false; // Ensure it's not muted
                             bgMusic.play()
                                 .then(() => {
                                     // Remove all event listeners once audio successfully plays
@@ -296,6 +328,7 @@
                             document.addEventListener(event, playOnInteraction, { once: true });
                         });
                     });
+                }
             };
             
             // Start the countdown
